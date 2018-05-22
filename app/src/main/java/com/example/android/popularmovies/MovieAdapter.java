@@ -26,7 +26,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         notifyDataSetChanged();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView mImageView;
 
         public ViewHolder(View v) {
@@ -39,7 +39,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
                     Intent intent = new Intent(context, MovieDetailActivity.class);
                     Log.d("Poster Clicked", "Element " + getAdapterPosition() + " clicked.");
 
-                    intent.putExtra("movie_title", Integer.toString(getAdapterPosition()));
+
+                    intent.putExtra("movie", movies.get(getAdapterPosition()));
                     context.startActivity(intent);
                 }
             });

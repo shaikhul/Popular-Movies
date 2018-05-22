@@ -14,7 +14,9 @@ public class MovieDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movie_detail);
 
         Bundle bundle = getIntent().getExtras();
+        Movie movie = (Movie) bundle.getParcelable("movie");
+
         mTextView = (TextView) findViewById(R.id.tv_movie_title);
-        mTextView.setText(mTextView.getText() + bundle.getString("movie_title"));
+        mTextView.setText(movie.getTitle());
     }
 }

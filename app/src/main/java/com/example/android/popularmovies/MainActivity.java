@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
     private ArrayList<Movie> loadMovies(String type) {
         String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
-
+        Log.d("moviesJsonStr", moviesJsonStr);
         try {
             return MovieDbJsonUtils.getMoviesFromJson(this, moviesJsonStr);
         } catch (JSONException e) {
