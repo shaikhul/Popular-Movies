@@ -8,6 +8,9 @@ import android.support.v7.widget.RecyclerView;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.example.android.popularmovies.utilities.MovieDbJsonUtils;
@@ -23,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
     private RecyclerView.LayoutManager gridLayoutManager;
+    private int sortBy;
 
     private static final int MOVIE_LOADER_ID = 123;
 
@@ -44,13 +48,14 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         Log.d("onCreate", "Here I come");
 
         int loaderId = MOVIE_LOADER_ID;
+        sortBy = R.id.action_sort_by_popular_movies;
         Bundle bundleForLoader = null;
         LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
         getSupportLoaderManager().initLoader(loaderId, bundleForLoader, callback);
     }
 
-    private ArrayList<Movie> loadMovies() {
-        String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl("popular");
+    private ArrayList<Movie> loadMovies(String type) {
+        String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
 
         try {
             return MovieDbJsonUtils.getMoviesFromJson(this, moviesJsonStr);
@@ -58,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void resetData() {
+        moviesAdapter.setDataset(null);
     }
 
     @Override
@@ -68,12 +77,15 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
             @Override
             public ArrayList<Movie> loadInBackground() {
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                String type = "popular";
+
+                if (sortBy == R.id.action_sort_by_popular_movies) {
+                    type = "popular";
+                } else if (sortBy == R.id.action_sort_by_top_rated) {
+                    type = "top_rated";
                 }
-                movies = loadMovies();
+
+                movies = loadMovies(type);
                 return movies;
             }
 
@@ -105,5 +117,26 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     @Override
     public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.movies, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id != sortBy) {
+            sortBy = item.getItemId();
+            resetData();
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
