@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.example.android.popularmovies.utilities.MovieDbJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
@@ -19,13 +21,15 @@ import com.example.android.popularmovies.utilities.NetworkUtils;
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>> {
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
     private RecyclerView.LayoutManager gridLayoutManager;
+    private TextView mErrorMessageDisplay;
+    private ProgressBar mLoadingIndicator;
+
     private int sortBy;
 
     private static final int MOVIE_LOADER_ID = 123;
@@ -37,15 +41,14 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies);
 
-        // use a linear layout manager
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
 
         moviesAdapter = new MovieAdapter();
-        //moviesAdapter.setDataset(loadMovies());
         mRecyclerView.setAdapter(moviesAdapter);
 
-        Log.d("onCreate", "Here I come");
+        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
         int loaderId = MOVIE_LOADER_ID;
         sortBy = R.id.action_sort_by_popular_movies;
@@ -67,6 +70,16 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
     private void resetData() {
         moviesAdapter.setDataset(null);
+    }
+
+    private void showMoviesDataView() {
+        mRecyclerView.setVisibility(View.VISIBLE);
+        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+    }
+
+    private void showErrorMessage() {
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -94,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
                 if (movies.size() > 0) {
                     deliverResult(movies);
                 } else {
+                    mLoadingIndicator.setVisibility(View.VISIBLE);
                     forceLoad();
                 }
             }
@@ -109,9 +123,14 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
     @Override
     public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
-        Log.d("onLoadFinished ", Integer.toString(data.size()));
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
         moviesAdapter.setDataset(data);
-        mRecyclerView.setVisibility(View.VISIBLE);
+
+        if (data == null || data.size() <= 0) {
+            showErrorMessage();
+        } else {
+            showMoviesDataView();
+        }
     }
 
     @Override

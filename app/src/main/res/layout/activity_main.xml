@@ -14,4 +14,38 @@
 
     </android.support.v7.widget.RecyclerView>
 
+    <TextView
+        android:id="@+id/tv_error_message_display"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"
+        android:text="@string/error_message"
+        android:textSize="20sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/rv_movies"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/pb_loading_indicator"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:layout_gravity="center"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </android.support.constraint.ConstraintLayout>

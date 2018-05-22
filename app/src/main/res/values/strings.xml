@@ -3,4 +3,9 @@
 
     <string name="sort_by_popular_movies">Most Popular</string>
     <string name="sort_by_top_rated">Top Rated</string>
+
+    <string name="error_message">
+        An error has occurred. Please try again by clicking REFRESH
+    </string>
+
 </resources>
