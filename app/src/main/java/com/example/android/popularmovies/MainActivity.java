@@ -10,6 +10,11 @@ import android.support.v7.widget.GridLayoutManager;
 import android.util.Log;
 import android.view.View;
 
+import com.example.android.popularmovies.utilities.MovieDbJsonUtils;
+import com.example.android.popularmovies.utilities.NetworkUtils;
+
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         //moviesAdapter.setDataset(loadMovies());
         mRecyclerView.setAdapter(moviesAdapter);
 
+        Log.d("onCreate", "Here I come");
+
         int loaderId = MOVIE_LOADER_ID;
         Bundle bundleForLoader = null;
         LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
@@ -43,16 +50,14 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     private ArrayList<Movie> loadMovies() {
-        ArrayList<Movie> movies = new ArrayList<Movie>();
+        String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl("popular");
 
-        movies.add(new Movie(1, "/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"));
-        movies.add(new Movie(2, "/r70GGoZ5PqqokDDRnVfTN7PPDtJ.jpg"));
-        movies.add(new Movie(3, "/jjPJ4s3DWZZvI4vw8Xfi4Vqa1Q8.jpg"));
-        movies.add(new Movie(4, "/uxzzxijgPIY7slzFvMotPv8wjKA.jpg"));
-        movies.add(new Movie(5, "/to0spRl1CMDvyUbOnbb4fTk3VAd.jpg"));
-        movies.add(new Movie(6, "/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg"));
-
-        return movies;
+        try {
+            return MovieDbJsonUtils.getMoviesFromJson(this, moviesJsonStr);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -74,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
             @Override
             protected void onStartLoading() {
-                if (movies != null) {
+                if (movies.size() > 0) {
                     deliverResult(movies);
                 } else {
                     forceLoad();
@@ -84,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
             @Override
             public void deliverResult(ArrayList<Movie> data) {
                 movies = data;
+                Log.d("deliverResult", Integer.toString(movies.size()));
                 super.deliverResult(data);
             }
         };
@@ -91,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
     @Override
     public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+        Log.d("onLoadFinished ", Integer.toString(data.size()));
         moviesAdapter.setDataset(data);
         mRecyclerView.setVisibility(View.VISIBLE);
     }

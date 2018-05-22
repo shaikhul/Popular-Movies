@@ -18,7 +18,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     private ArrayList<Movie> movies;
 
     public MovieAdapter() {
-        movies = null;
+        movies = new ArrayList<Movie>();
     }
 
     public void setDataset(ArrayList<Movie> mDataset) {

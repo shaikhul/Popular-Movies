@@ -2,17 +2,19 @@ package com.example.android.popularmovies;
 
 public class Movie {
     private Integer id;
-    private Integer title;
+    private String title;
     private String posterPath;
-    private Integer voteAverage;
+    private Double voteAverage;
     private String releasedDate;
+    private String overview;
 
-    public Movie(Integer id, Integer title, String posterPath, Integer voteAverage, String releasedDate) {
+    public Movie(Integer id, String title, String posterPath, Double voteAverage, String releasedDate, String overview) {
         this.id = id;
         this.title = title;
         this.posterPath = posterPath;
         this.voteAverage = voteAverage;
         this.releasedDate = releasedDate;
+        this.overview = overview;
     }
 
     public Movie(Integer id, String posterPath) {
@@ -28,11 +30,11 @@ public class Movie {
         this.id = id;
     }
 
-    public Integer getTitle() {
+    public String getTitle() {
         return title;
     }
 
-    public void setTitle(Integer title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
@@ -44,11 +46,11 @@ public class Movie {
         this.posterPath = posterPath;
     }
 
-    public Integer getVoteAverage() {
+    public Double getVoteAverage() {
         return voteAverage;
     }
 
-    public void setVoteAverage(Integer voteAverage) {
+    public void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
     }
 
@@ -58,5 +60,13 @@ public class Movie {
 
     public void setReleasedDate(String releasedDate) {
         this.releasedDate = releasedDate;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
     }
 }
