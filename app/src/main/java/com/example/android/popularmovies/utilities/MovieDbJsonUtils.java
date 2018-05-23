@@ -13,6 +13,10 @@ public class MovieDbJsonUtils {
     public static ArrayList<Movie> getMoviesFromJson(String moviesJsonStr) throws JSONException {
         ArrayList<Movie> movies = new ArrayList<Movie>();
 
+        if (moviesJsonStr == null) {
+            return movies;
+        }
+
         JSONObject moviesJson = new JSONObject(moviesJsonStr);
 
         if (moviesJson.has("results")) {

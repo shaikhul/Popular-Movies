@@ -1,6 +1,11 @@
 package com.example.android.popularmovies.utilities;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+
+import com.example.android.popularmovies.BuildConfig;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -14,7 +19,7 @@ public class NetworkUtils {
 
     private static final String MOVIE_DB_URL = "https://api.themoviedb.org/3/movie/";
     public static final String MOVIE_DB_POSTER_BASE_URL = "http://image.tmdb.org/t/p/w185/";
-    private static final String API_KEY = "MOVIE_DB_API_KEY";
+    private static final String API_KEY = BuildConfig.MOVIE_DB_API_KEY;
 
     private static URL buildUrl(String type) {
         Uri builtUri = Uri.parse(MOVIE_DB_URL + type).buildUpon()

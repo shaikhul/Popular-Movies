@@ -1,5 +1,8 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
@@ -52,12 +55,27 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
+        boolean isConnected = isConnected();
+
         sortBy = R.id.action_sort_by_popular_movies;
         LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
-        getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
+        if (isConnected) {
+            getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
+        }
+    }
+
+    private boolean isConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     private ArrayList<Movie> loadMovies(String type) {
+        if (isConnected() == false) {
+            return null;
+        }
+
         String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
         try {
             return MovieDbJsonUtils.getMoviesFromJson(moviesJsonStr);
