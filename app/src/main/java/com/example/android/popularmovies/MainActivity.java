@@ -1,5 +1,6 @@
 package com.example.android.popularmovies;
 
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -7,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,13 +26,14 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>> {
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
-    private RecyclerView.LayoutManager gridLayoutManager;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
 
     private int sortBy;
 
     private static final int MOVIE_LOADER_ID = 123;
+    private static final String POPULAR = "popular";
+    private static final String TOP_RATED = "top_rated";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies);
 
+        RecyclerView.LayoutManager gridLayoutManager;
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
 
@@ -50,18 +52,15 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        int loaderId = MOVIE_LOADER_ID;
         sortBy = R.id.action_sort_by_popular_movies;
-        Bundle bundleForLoader = null;
         LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
-        getSupportLoaderManager().initLoader(loaderId, bundleForLoader, callback);
+        getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
     }
 
     private ArrayList<Movie> loadMovies(String type) {
         String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
-        Log.d("moviesJsonStr", moviesJsonStr);
         try {
-            return MovieDbJsonUtils.getMoviesFromJson(this, moviesJsonStr);
+            return MovieDbJsonUtils.getMoviesFromJson(moviesJsonStr);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -69,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     private void resetData() {
-        moviesAdapter.setDataset(null);
+        moviesAdapter.setMovies(null);
     }
 
     private void showMoviesDataView() {
@@ -82,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         mRecyclerView.setVisibility(View.INVISIBLE);
     }
 
+    @NonNull
     @Override
     public Loader<ArrayList<Movie>> onCreateLoader(int i, Bundle bundle) {
         return new AsyncTaskLoader<ArrayList<Movie>>(this) {
@@ -90,12 +90,12 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
             @Override
             public ArrayList<Movie> loadInBackground() {
-                String type = "popular";
+                String type = POPULAR;
 
                 if (sortBy == R.id.action_sort_by_popular_movies) {
-                    type = "popular";
+                    type = POPULAR;
                 } else if (sortBy == R.id.action_sort_by_top_rated) {
-                    type = "top_rated";
+                    type = TOP_RATED;
                 }
 
                 movies = loadMovies(type);
@@ -115,16 +115,15 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
             @Override
             public void deliverResult(ArrayList<Movie> data) {
                 movies = data;
-                Log.d("deliverResult", Integer.toString(movies.size()));
                 super.deliverResult(data);
             }
         };
     }
 
     @Override
-    public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+    public void onLoadFinished(@NonNull Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
-        moviesAdapter.setDataset(data);
+        moviesAdapter.setMovies(data);
 
         if (data == null || data.size() <= 0) {
             showErrorMessage();
@@ -134,8 +133,8 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     @Override
-    public void onLoaderReset(Loader<ArrayList<Movie>> loader) {
-
+    public void onLoaderReset(@NonNull Loader<ArrayList<Movie>> loader) {
+        // noop
     }
 
     @Override

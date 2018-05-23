@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="iv_movie_thumbnail_min_width">350dp</dimen>
+    <dimen name="iv_movie_thumbnail_min_height">300dp</dimen>
+
+    <dimen name="iv_movie_thumbnail_width">184dp</dimen>
+    <dimen name="iv_movie_thumbnail_height">193dp</dimen>
+
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">16dp</dimen>
+</resources>

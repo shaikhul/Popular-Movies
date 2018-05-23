@@ -8,7 +8,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="visible"
-        android:minWidth="350dp"
-        android:minHeight="300dp"/>
+        android:minWidth="@dimen/iv_movie_thumbnail_min_width"
+        android:minHeight="@dimen/iv_movie_thumbnail_min_height"
+        android:contentDescription="@string/iv_movie_thumbnail_cd"/>
 
 </FrameLayout>

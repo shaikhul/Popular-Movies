@@ -1,7 +1,5 @@
 package com.example.android.popularmovies.utilities;
 
-import android.content.Context;
-
 import com.example.android.popularmovies.Movie;
 
 import org.json.JSONArray;
@@ -12,7 +10,7 @@ import java.util.ArrayList;
 
 public class MovieDbJsonUtils {
 
-    public static ArrayList<Movie> getMoviesFromJson(Context context, String moviesJsonStr) throws JSONException {
+    public static ArrayList<Movie> getMoviesFromJson(String moviesJsonStr) throws JSONException {
         ArrayList<Movie> movies = new ArrayList<Movie>();
 
         JSONObject moviesJson = new JSONObject(moviesJsonStr);
@@ -24,7 +22,7 @@ public class MovieDbJsonUtils {
                 JSONObject movieObject = moviesArray.getJSONObject(i);
 
                 Integer movieId = movieObject.getInt("id");
-                String movieTitle = movieObject.getString("title");
+                String movieTitle = movieObject.getString("original_title");
                 String posterPath = movieObject.getString("poster_path");
                 Double voteAverage = movieObject.getDouble("vote_average");
                 String releaseDate = movieObject.getString("release_date");

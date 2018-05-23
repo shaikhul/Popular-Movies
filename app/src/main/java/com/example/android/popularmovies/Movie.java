@@ -23,7 +23,7 @@ public class Movie implements Parcelable {
         this.overview = overview;
     }
 
-    public Movie(Parcel in) {
+    private Movie(Parcel in) {
         setId(in.readInt());
         setTitle(in.readString());
         setPosterPath(in.readString());
@@ -32,11 +32,11 @@ public class Movie implements Parcelable {
         setOverview(in.readString());
     }
 
-    public Integer getId() {
+    private Integer getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    private void setId(Integer id) {
         this.id = id;
     }
 
@@ -44,7 +44,7 @@ public class Movie implements Parcelable {
         return title;
     }
 
-    public void setTitle(String title) {
+    private void setTitle(String title) {
         this.title = title;
     }
 
@@ -52,7 +52,7 @@ public class Movie implements Parcelable {
         return posterPath;
     }
 
-    public void setPosterPath(String posterPath) {
+    private void setPosterPath(String posterPath) {
         this.posterPath = posterPath;
     }
 
@@ -60,7 +60,7 @@ public class Movie implements Parcelable {
         return voteAverage;
     }
 
-    public void setVoteAverage(Double voteAverage) {
+    private void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
     }
 
@@ -68,7 +68,7 @@ public class Movie implements Parcelable {
         return releaseDate;
     }
 
-    public void setReleaseDate(String releaseDate) {
+    private void setReleaseDate(String releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -76,7 +76,7 @@ public class Movie implements Parcelable {
         return overview;
     }
 
-    public void setOverview(String overview) {
+    private void setOverview(String overview) {
         this.overview = overview;
     }
 

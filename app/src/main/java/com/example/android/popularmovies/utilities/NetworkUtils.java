@@ -13,9 +13,10 @@ import okhttp3.Response;
 public class NetworkUtils {
 
     private static final String MOVIE_DB_URL = "https://api.themoviedb.org/3/movie/";
-    private static final String API_KEY = "68ff5ad5d2c88ea4d1e04f1730b7351b";
+    public static final String MOVIE_DB_POSTER_BASE_URL = "http://image.tmdb.org/t/p/w185/";
+    private static final String API_KEY = "MOVIE_DB_API_KEY";
 
-    public static URL buildUrl(String type) {
+    private static URL buildUrl(String type) {
         Uri builtUri = Uri.parse(MOVIE_DB_URL + type).buildUpon()
                 .appendQueryParameter("api_key", API_KEY)
                 .build();
@@ -37,7 +38,7 @@ public class NetworkUtils {
                 .url(buildUrl(type))
                 .build();
 
-        Response response = null;
+        Response response;
         try {
             response = client.newCall(request).execute();
             return response.body().string();

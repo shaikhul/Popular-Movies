@@ -2,13 +2,14 @@ package com.example.android.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -21,15 +22,15 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         movies = new ArrayList<Movie>();
     }
 
-    public void setDataset(ArrayList<Movie> mDataset) {
-        this.movies = mDataset;
+    public void setMovies(ArrayList<Movie> movies) {
+        this.movies = movies;
         notifyDataSetChanged();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView mImageView;
+        final ImageView mImageView;
 
-        public ViewHolder(View v) {
+        ViewHolder(View v) {
             super(v);
 
             v.setOnClickListener(new View.OnClickListener() {
@@ -37,9 +38,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
                 public void onClick(View v) {
                     Context context = v.getContext();
                     Intent intent = new Intent(context, MovieDetailActivity.class);
-                    Log.d("Poster Clicked", "Element " + getAdapterPosition() + " clicked.");
-
-
                     intent.putExtra("movie", movies.get(getAdapterPosition()));
                     context.startActivity(intent);
                 }
@@ -49,19 +47,18 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         }
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.movie_thumbnail, parent, false);
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Movie movie = movies.get(position);
-        String url = "http://image.tmdb.org/t/p/w185/" + movie.getPosterPath();
-        Log.d("URL", url);
+        String url = NetworkUtils.MOVIE_DB_POSTER_BASE_URL + movie.getPosterPath();
         Picasso.with(holder.mImageView.getContext()).load(url).into(holder.mImageView);
     }
 
