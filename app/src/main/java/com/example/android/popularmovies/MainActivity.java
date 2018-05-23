@@ -1,6 +1,7 @@
 package com.example.android.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
@@ -26,7 +27,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 
 
-public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>> {
+public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>>, MovieAdapter.MovieAdapterOnClickHandler {
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
     private TextView mErrorMessageDisplay;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
 
-        moviesAdapter = new MovieAdapter();
+        moviesAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(moviesAdapter);
 
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
@@ -62,6 +63,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         if (isConnected) {
             getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
         }
+    }
+
+    @Override
+    public void onClick(Movie movie) {
+        Intent intentToStartDetailActivity = new Intent(this, MovieDetailActivity.class);
+        intentToStartDetailActivity.putExtra("movie", movie);
+        startActivity(intentToStartDetailActivity);
     }
 
     private boolean isConnected() {

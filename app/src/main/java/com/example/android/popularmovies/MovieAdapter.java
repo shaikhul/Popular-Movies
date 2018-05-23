@@ -18,7 +18,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
 
     private ArrayList<Movie> movies;
 
-    public MovieAdapter() {
+    private MovieAdapterOnClickHandler mClickHandler;
+
+    public interface MovieAdapterOnClickHandler {
+        void onClick(Movie movie);
+    }
+
+    public MovieAdapter(MovieAdapterOnClickHandler clickHandler) {
+        mClickHandler = clickHandler;
         movies = new ArrayList<Movie>();
     }
 
@@ -27,23 +34,37 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         notifyDataSetChanged();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final ImageView mImageView;
 
-        ViewHolder(View v) {
+        public ViewHolder(View v) {
             super(v);
-
-            v.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, MovieDetailActivity.class);
-                    intent.putExtra("movie", movies.get(getAdapterPosition()));
-                    context.startActivity(intent);
-                }
-            });
-
             mImageView = (ImageView) v.findViewById(R.id.iv_movie_thumbnail);
+            v.setOnClickListener(this);
+        }
+//        ViewHolder(View v) {
+//            super(v);
+//
+//            v.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Context context = v.getContext();
+//                    Intent intent = new Intent(context, MovieDetailActivity.class);
+//                    intent.putExtra("movie", movies.get(getAdapterPosition()));
+//                    context.startActivity(intent);
+//                }
+//            });
+//
+//            mImageView = (ImageView) v.findViewById(R.id.iv_movie_thumbnail);
+//            view.setOnClickListener(this);
+//        }
+
+
+        @Override
+        public void onClick(View view) {
+            int adapterPosition = getAdapterPosition();
+            Movie movie = movies.get(adapterPosition);
+            mClickHandler.onClick(movie);
         }
     }
 
