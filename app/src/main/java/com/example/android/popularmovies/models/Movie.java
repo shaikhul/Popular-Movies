@@ -1,4 +1,4 @@
-package com.example.android.popularmovies;
+package com.example.android.popularmovies.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -32,7 +32,7 @@ public class Movie implements Parcelable {
         setOverview(in.readString());
     }
 
-    private Integer getId() {
+    public Integer getId() {
         return id;
     }
 

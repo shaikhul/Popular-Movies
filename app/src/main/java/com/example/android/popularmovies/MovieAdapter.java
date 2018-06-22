@@ -1,7 +1,5 @@
 package com.example.android.popularmovies;
 
-import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -9,14 +7,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.example.android.popularmovies.utilities.NetworkUtils;
+import com.example.android.popularmovies.models.Movie;
+import com.example.android.popularmovies.utilities.MovieUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
 
-    private ArrayList<Movie> movies;
+    private List<Movie> movies;
 
     private MovieAdapterOnClickHandler mClickHandler;
 
@@ -29,7 +29,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         movies = new ArrayList<Movie>();
     }
 
-    public void setMovies(ArrayList<Movie> movies) {
+    public void setMovies(List<Movie> movies) {
         this.movies = movies;
         notifyDataSetChanged();
     }
@@ -42,23 +42,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
             mImageView = (ImageView) v.findViewById(R.id.iv_movie_thumbnail);
             v.setOnClickListener(this);
         }
-//        ViewHolder(View v) {
-//            super(v);
-//
-//            v.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    Context context = v.getContext();
-//                    Intent intent = new Intent(context, MovieDetailActivity.class);
-//                    intent.putExtra("movie", movies.get(getAdapterPosition()));
-//                    context.startActivity(intent);
-//                }
-//            });
-//
-//            mImageView = (ImageView) v.findViewById(R.id.iv_movie_thumbnail);
-//            view.setOnClickListener(this);
-//        }
-
 
         @Override
         public void onClick(View view) {
@@ -79,7 +62,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Movie movie = movies.get(position);
-        String url = NetworkUtils.MOVIE_DB_POSTER_BASE_URL + movie.getPosterPath();
+        String url = MovieUtils.getMovieThumbnailSrc(movie.getPosterPath());
         Picasso.with(holder.mImageView.getContext()).load(url).into(holder.mImageView);
     }
 

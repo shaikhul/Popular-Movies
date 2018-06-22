@@ -19,21 +19,23 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.utilities.MovieDbJsonUtils;
-import com.example.android.popularmovies.utilities.NetworkUtils;
+import com.example.android.popularmovies.models.Movie;
+import com.example.android.popularmovies.utilities.MovieDbApiClient;
 
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>>, MovieAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements LoaderCallbacks<List<Movie>>, MovieAdapter.MovieAdapterOnClickHandler {
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
 
     private int sortBy;
+    private static final String SORT_BY_KEY = "sortBy";
 
     private static final int MOVIE_LOADER_ID = 123;
     private static final String POPULAR = "popular";
@@ -58,11 +60,28 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
         boolean isConnected = isConnected();
 
-        sortBy = R.id.action_sort_by_popular_movies;
-        LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
+        if (savedInstanceState != null) {
+            sortBy = savedInstanceState.getInt(SORT_BY_KEY);
+        } else {
+            sortBy = R.id.action_sort_by_popular_movies;
+        }
+
+        LoaderCallbacks<List<Movie>> callback = MainActivity.this;
         if (isConnected) {
             getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(SORT_BY_KEY, sortBy);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        sortBy = savedInstanceState.getInt(SORT_BY_KEY);
     }
 
     @Override
@@ -79,14 +98,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    private ArrayList<Movie> loadMovies(String type) {
+    private List<Movie> loadMovies(String movieType) {
         if (isConnected() == false) {
             return null;
         }
 
-        String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
         try {
-            return MovieDbJsonUtils.getMoviesFromJson(moviesJsonStr);
+            return new MovieDbApiClient().getMovies(movieType);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -109,13 +127,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
 
     @NonNull
     @Override
-    public Loader<ArrayList<Movie>> onCreateLoader(int i, Bundle bundle) {
-        return new AsyncTaskLoader<ArrayList<Movie>>(this) {
+    public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
+        return new AsyncTaskLoader<List<Movie>>(this) {
 
-            ArrayList<Movie> movies = new ArrayList<Movie>();
+            List<Movie> movies = new ArrayList<Movie>();
 
             @Override
-            public ArrayList<Movie> loadInBackground() {
+            public List<Movie> loadInBackground() {
                 String type = POPULAR;
 
                 if (sortBy == R.id.action_sort_by_popular_movies) {
@@ -139,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
             }
 
             @Override
-            public void deliverResult(ArrayList<Movie> data) {
+            public void deliverResult(List<Movie> data) {
                 movies = data;
                 super.deliverResult(data);
             }
@@ -147,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     @Override
-    public void onLoadFinished(@NonNull Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+    public void onLoadFinished(@NonNull Loader<List<Movie>> loader, List<Movie> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         moviesAdapter.setMovies(data);
 
@@ -159,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     @Override
-    public void onLoaderReset(@NonNull Loader<ArrayList<Movie>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<Movie>> loader) {
         // noop
     }
 
