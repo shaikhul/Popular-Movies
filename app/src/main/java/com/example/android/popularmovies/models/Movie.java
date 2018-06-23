@@ -1,20 +1,43 @@
 package com.example.android.popularmovies.models;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
  * Parcelable implementation inspired by https://dzone.com/articles/using-android-parcel
  */
+@Entity(tableName = "movies")
 public class Movie implements Parcelable {
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "internal_id")
+    private Integer internalId;
+
+    @ColumnInfo(name = "id")
     private Integer id;
+
     private String title;
+
+    @ColumnInfo(name = "poster_path")
     private String posterPath;
+
+    @ColumnInfo(name = "vote_average")
     private Double voteAverage;
+
+    @ColumnInfo(name = "release_date")
     private String releaseDate;
+
     private String overview;
 
-    public Movie(Integer id, String title, String posterPath, Double voteAverage, String releaseDate, String overview) {
+    public Movie() {
+
+    }
+
+    public Movie(Integer internalId, Integer id, String title, String posterPath, Double voteAverage, String releaseDate, String overview) {
+        this.internalId = internalId;
         this.id = id;
         this.title = title;
         this.posterPath = posterPath;
@@ -23,7 +46,19 @@ public class Movie implements Parcelable {
         this.overview = overview;
     }
 
+    @Ignore
+    public Movie(Integer id, String title, String posterPath, Double voteAverage, String releaseDate, String overview) {
+        this.id = id;
+        this.title = title;
+        this.posterPath = posterPath;
+        this.voteAverage = voteAverage;
+        this.releaseDate = releaseDate;
+        this.overview = overview;
+        this.internalId = -1;
+    }
+
     private Movie(Parcel in) {
+        setInternalId(in.readInt());
         setId(in.readInt());
         setTitle(in.readString());
         setPosterPath(in.readString());
@@ -32,11 +67,19 @@ public class Movie implements Parcelable {
         setOverview(in.readString());
     }
 
+    public Integer getInternalId() {
+        return internalId;
+    }
+
+    public void setInternalId(Integer internalId) {
+        this.internalId = internalId;
+    }
+
     public Integer getId() {
         return id;
     }
 
-    private void setId(Integer id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -44,7 +87,7 @@ public class Movie implements Parcelable {
         return title;
     }
 
-    private void setTitle(String title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
@@ -52,7 +95,7 @@ public class Movie implements Parcelable {
         return posterPath;
     }
 
-    private void setPosterPath(String posterPath) {
+    public void setPosterPath(String posterPath) {
         this.posterPath = posterPath;
     }
 
@@ -60,7 +103,7 @@ public class Movie implements Parcelable {
         return voteAverage;
     }
 
-    private void setVoteAverage(Double voteAverage) {
+    public void setVoteAverage(Double voteAverage) {
         this.voteAverage = voteAverage;
     }
 
@@ -68,7 +111,7 @@ public class Movie implements Parcelable {
         return releaseDate;
     }
 
-    private void setReleaseDate(String releaseDate) {
+    public void setReleaseDate(String releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -76,7 +119,7 @@ public class Movie implements Parcelable {
         return overview;
     }
 
-    private void setOverview(String overview) {
+    public void setOverview(String overview) {
         this.overview = overview;
     }
 
@@ -87,6 +130,7 @@ public class Movie implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(getInternalId());
         parcel.writeInt(getId());
         parcel.writeString(getTitle());
         parcel.writeString(getPosterPath());

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -14,15 +15,19 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.example.android.popularmovies.data.MovieDatabase;
 import com.example.android.popularmovies.models.Movie;
 import com.example.android.popularmovies.models.MovieReview;
 import com.example.android.popularmovies.models.MovieTrailer;
 import com.example.android.popularmovies.utilities.MovieDbApiClient;
 import com.example.android.popularmovies.utilities.MovieUtils;
+import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -40,13 +45,47 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     private Movie movie;
     private static final String MOVIE_KEY = "movie";
+    private static final int TRAILER_LOADER_ID = 150;
+    private static final int REVIEWS_LOADER_ID = 200;
 
     private LoaderManager.LoaderCallbacks<List<MovieReview>> reviewLoaderListener;
+
+    private static class addToMyFavoritesAsyncTask extends AsyncTask<Movie, Void, Void> {
+
+        private MovieDatabase db;
+        private Boolean undo;
+
+        addToMyFavoritesAsyncTask(MovieDatabase db, Boolean undo) {
+            this.db = db;
+            this.undo = undo;
+        }
+
+        @Override
+        protected Void doInBackground(Movie... movies) {
+            Movie movie = movies[0];
+
+            if (undo) {
+                db.movieDao().delete(movie);
+                Log.v("db op", "movie deleted");
+            } else {
+                Movie movieFromDb = db.movieDao().findById(movie.getId());
+                if (movieFromDb == null) {
+                    movie.setInternalId(null);
+                    db.movieDao().insert(movies[0]);
+                    Log.v("db op", "movie inserted");
+                } else {
+                    Log.v("db op", "movie skipped");
+                }
+            }
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
+        setTitle(R.string.title_movie_detail);
 
         TextView mTitleTextView, mOverviewTextView, mRelaseDate;
         ImageView mImageView;
@@ -57,6 +96,27 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         } else {
             Bundle bundle = getIntent().getExtras();
             movie = (Movie) bundle.getParcelable("movie");
+        }
+
+        final Button favoritesButton = (Button) findViewById(R.id.btn_favorites);
+
+        if (movie.getInternalId() != -1) {
+            // movie loaded from db
+            favoritesButton.setBackgroundResource(android.R.drawable.star_on);
+            favoritesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this), true).execute(movie);
+                }
+            });
+        } else {
+            // movie from api
+            favoritesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this), false).execute(movie);
+                }
+            });
         }
 
         mTitleTextView = (TextView) findViewById(R.id.tv_movie_title);
@@ -81,9 +141,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
         movieTrailerAdapter = new MovieTrailerAdapter(this);
         mRecyclerView.setAdapter(movieTrailerAdapter);
-
-        LoaderManager.LoaderCallbacks<List<MovieTrailer>> callback = MovieDetailActivity.this;
-        getSupportLoaderManager().initLoader(150, null, callback);
 
         mReviewRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_reviews);
 
@@ -135,7 +192,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             }
         };
 
-        getSupportLoaderManager().initLoader(175, null, reviewLoaderListener);
+        if (NetworkUtils.hasInternetConnection(this)) {
+            getSupportLoaderManager().initLoader(TRAILER_LOADER_ID, null, this);
+            getSupportLoaderManager().initLoader(REVIEWS_LOADER_ID, null, reviewLoaderListener);
+        }
     }
 
     @Override
@@ -152,6 +212,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     }
 
     private List<MovieReview> loadMovieReviews() {
+        if (NetworkUtils.hasInternetConnection(this) == false) {
+            return null;
+        }
+
         try {
             return new MovieDbApiClient().getMovieReviews(movie.getId());
         } catch (JSONException e) {
@@ -169,7 +233,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             @Nullable
             @Override
             public List<MovieTrailer> loadInBackground() {
-                movieTrailers = getMovieTrailers();
+                movieTrailers = loadMovieTrailers();
                 return movieTrailers;
             }
 
@@ -190,9 +254,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         };
     }
 
-    private List<MovieTrailer> getMovieTrailers() {
-        // @todo add internet connection check
-        Log.v("load trailer", "Loading trailers");
+    private List<MovieTrailer> loadMovieTrailers() {
+        if (NetworkUtils.hasInternetConnection(this) == false) {
+            return null;
+        }
 
         try {
             return new MovieDbApiClient().getMovieTrailers(movie.getId());

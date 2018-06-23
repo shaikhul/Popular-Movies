@@ -21,6 +21,8 @@ import android.widget.TextView;
 
 import com.example.android.popularmovies.models.Movie;
 import com.example.android.popularmovies.utilities.MovieDbApiClient;
+import com.example.android.popularmovies.utilities.MovieUtils;
+import com.example.android.popularmovies.utilities.NetworkUtils;
 
 import org.json.JSONException;
 
@@ -58,8 +60,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        boolean isConnected = isConnected();
-
         if (savedInstanceState != null) {
             sortBy = savedInstanceState.getInt(SORT_BY_KEY);
         } else {
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         }
 
         LoaderCallbacks<List<Movie>> callback = MainActivity.this;
-        if (isConnected) {
+        if (NetworkUtils.hasInternetConnection(this)) {
             getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
         }
     }
@@ -91,15 +91,8 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         startActivity(intentToStartDetailActivity);
     }
 
-    private boolean isConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
     private List<Movie> loadMovies(String movieType) {
-        if (isConnected() == false) {
+        if (NetworkUtils.hasInternetConnection(this) == false) {
             return null;
         }
 
@@ -121,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     }
 
     private void showErrorMessage() {
+        mErrorMessageDisplay.setText(R.string.error_message);
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
         mRecyclerView.setVisibility(View.INVISIBLE);
     }
@@ -134,15 +128,18 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
             @Override
             public List<Movie> loadInBackground() {
-                String type = POPULAR;
-
-                if (sortBy == R.id.action_sort_by_popular_movies) {
-                    type = POPULAR;
-                } else if (sortBy == R.id.action_sort_by_top_rated) {
-                    type = TOP_RATED;
+                switch (sortBy) {
+                    case R.id.action_sort_by_popular_movies:
+                        movies = loadMovies(POPULAR);
+                        break;
+                    case R.id.action_sort_by_top_rated:
+                        movies = loadMovies(TOP_RATED);
+                        break;
+                    case R.id.action_my_favorites:
+                        movies = getMyFavoriteMovies();
+                        break;
                 }
 
-                movies = loadMovies(type);
                 return movies;
             }
 
@@ -164,16 +161,28 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         };
     }
 
+    private List<Movie> getMyFavoriteMovies() {
+        return MovieUtils.getMyFavoriteMovies(this);
+    }
+
     @Override
     public void onLoadFinished(@NonNull Loader<List<Movie>> loader, List<Movie> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         moviesAdapter.setMovies(data);
 
-        if (data == null || data.size() <= 0) {
+        if (data == null) {
             showErrorMessage();
+        } else if (data.size() == 0) {
+            showEmptyState();
         } else {
             showMoviesDataView();
         }
+    }
+
+    private void showEmptyState() {
+        mErrorMessageDisplay.setText(R.string.empty_state_message);
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -192,6 +201,18 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_sort_by_popular_movies:
+                setTitle(R.string.app_name);
+                break;
+            case R.id.action_sort_by_top_rated:
+                setTitle(R.string.title_top_rated);
+                break;
+            case R.id.action_my_favorites:
+                setTitle(R.string.title_my_favorites);
+                break;
+        }
 
         if (id != sortBy) {
             sortBy = item.getItemId();

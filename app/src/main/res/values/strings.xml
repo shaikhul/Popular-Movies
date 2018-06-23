@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Popular Movies</string>
 
+    <string name="title_top_rated">Top Rated Movies</string>
+    <string name="title_my_favorites">My Favorite Movies</string>
+    <string name="title_movie_detail">Movie Detail</string>
+
     <string name="sort_by_popular_movies">Most Popular</string>
     <string name="sort_by_top_rated">Top Rated</string>
 
@@ -8,8 +12,11 @@
         An error has occurred. Most probably a network error.
     </string>
 
+    <string name="empty_state_message">No movies found!</string>
+
     <string name="iv_movie_thumbnail_cd">Movie Thumbnail</string>
 
     <string name="movie_title">Movie Title</string>
     <string name="release_date">Release Date</string>
+    <string name="my_favorites">My Favorites</string>
 </resources>

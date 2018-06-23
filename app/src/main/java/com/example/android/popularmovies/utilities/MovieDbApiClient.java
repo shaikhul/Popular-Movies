@@ -17,8 +17,8 @@ import java.util.List;
 public class MovieDbApiClient {
     private static final String MOVIE_DB_URL = "https://api.themoviedb.org/3/movie/";
 
-    private static final String POPULAR = "popular";
-    private static final String TOP_RATED = "top_rated";
+    public static final String POPULAR = "popular";
+    public static final String TOP_RATED = "top_rated";
 
     final String apiKey;
 
