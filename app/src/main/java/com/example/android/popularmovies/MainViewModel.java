@@ -10,9 +10,9 @@ import com.example.android.popularmovies.models.Movie;
 
 import java.util.List;
 
-public class MainViewModel extends AndroidViewModel {
+class MainViewModel extends AndroidViewModel {
 
-    private LiveData<List<Movie>> movies;
+    final private LiveData<List<Movie>> movies;
 
     public MainViewModel(@NonNull Application application) {
         super(application);

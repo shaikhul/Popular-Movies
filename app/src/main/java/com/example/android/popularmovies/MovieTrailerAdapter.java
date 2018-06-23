@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapter.ViewHolder> {
-    List<MovieTrailer> movieTrailers;
+    private List<MovieTrailer> movieTrailers;
 
-    MovieTrailerOnClickHandler mClickHandler;
+    final private MovieTrailerOnClickHandler mClickHandler;
 
     public void setMovieTrailers(List<MovieTrailer> movieTrailers) {
         this.movieTrailers = movieTrailers;
@@ -36,7 +36,7 @@ public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapte
         final ImageView imageView;
         final TextView mTrailerTextView;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             this.imageView = (ImageView) itemView.findViewById(R.id.ib_trailer);
             this.mTrailerTextView = (TextView) itemView.findViewById(R.id.tv_movie_trailer);

@@ -18,7 +18,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
 
     private List<Movie> movies;
 
-    private MovieAdapterOnClickHandler mClickHandler;
+    final private MovieAdapterOnClickHandler mClickHandler;
 
     public interface MovieAdapterOnClickHandler {
         void onClick(Movie movie);
@@ -37,7 +37,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final ImageView mImageView;
 
-        public ViewHolder(View v) {
+        ViewHolder(View v) {
             super(v);
             mImageView = (ImageView) v.findViewById(R.id.iv_movie_thumbnail);
             v.setOnClickListener(this);

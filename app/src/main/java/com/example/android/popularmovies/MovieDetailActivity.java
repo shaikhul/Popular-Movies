@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.popularmovies.data.MovieDatabase;
 import com.example.android.popularmovies.models.Movie;
@@ -46,10 +47,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     private static final int TRAILER_LOADER_ID = 150;
     private static final int REVIEWS_LOADER_ID = 200;
 
-    private static class addToMyFavoritesAsyncTask extends AsyncTask<Movie, Void, Void> {
+    private class addToMyFavoritesAsyncTask extends AsyncTask<Movie, Void, String> {
 
-        private MovieDatabase db;
-        private Boolean undo;
+        final private MovieDatabase db;
+        final private Boolean undo;
 
         addToMyFavoritesAsyncTask(MovieDatabase db, Boolean undo) {
             this.db = db;
@@ -57,24 +58,35 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         }
 
         @Override
-        protected Void doInBackground(Movie... movies) {
+        protected String doInBackground(Movie... movies) {
             Movie movie = movies[0];
+            String msg;
 
             if (undo) {
                 db.movieDao().delete(movie);
-                Log.v("db op", "movie deleted");
+                msg = getResources().getString(R.string.msg_movie_deleted);
             } else {
                 Movie movieFromDb = db.movieDao().findById(movie.getId());
                 if (movieFromDb == null) {
                     movie.setInternalId(null);
                     db.movieDao().insert(movies[0]);
-                    Log.v("db op", "movie inserted");
+                    msg = getResources().getString(R.string.msg_movie_added);
                 } else {
-                    Log.v("db op", "movie skipped");
+                    msg = getResources().getString(R.string.msg_movie_exists);
                 }
             }
-            return null;
+            return msg;
         }
+
+        @Override
+        protected void onPostExecute(String msg) {
+            super.onPostExecute(msg);
+            showToastMessage(msg);
+        }
+    }
+
+    private void showToastMessage(String msg) {
+        Toast.makeText(MovieDetailActivity.this, msg, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -83,22 +95,23 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         setContentView(R.layout.activity_movie_detail);
         setTitle(R.string.title_movie_detail);
 
-        TextView mTitleTextView, mOverviewTextView, mRelaseDate;
+        TextView mTitleTextView, mOverviewTextView, mReleaseDate;
         ImageView mImageView;
         RatingBar mRatingBar;
 
+        Bundle bundle;
         if (savedInstanceState != null) {
             movie = savedInstanceState.getParcelable(MOVIE_KEY);
         } else {
-            Bundle bundle = getIntent().getExtras();
+            bundle = getIntent().getExtras();
             movie = (Movie) bundle.getParcelable("movie");
         }
 
         final Button favoritesButton = (Button) findViewById(R.id.btn_favorites);
 
-        if (movie.getInternalId() != -1) {
+        if (movie != null && movie.getInternalId() != -1) {
             // movie loaded from db
-            favoritesButton.setBackgroundResource(android.R.drawable.star_on);
+            favoritesButton.setBackgroundResource(android.R.drawable.ic_menu_delete);
             favoritesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -125,8 +138,8 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         mOverviewTextView = (TextView) findViewById(R.id.tv_overview);
         mOverviewTextView.setText(movie.getOverview());
 
-        mRelaseDate = (TextView) findViewById(R.id.tv_release_date);
-        mRelaseDate.setText(movie.getReleaseDate());
+        mReleaseDate = (TextView) findViewById(R.id.tv_release_date);
+        mReleaseDate.setText(movie.getReleaseDate());
 
         mRatingBar = (RatingBar) findViewById(R.id.rb_vote_avg);
         mRatingBar.setRating(movie.getVoteAverage().intValue());
@@ -203,12 +216,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
         movie = savedInstanceState.getParcelable(MOVIE_KEY);
     }
 
     private List<MovieReview> loadMovieReviews() {
-        if (NetworkUtils.hasInternetConnection(this) == false) {
+        if (!NetworkUtils.hasInternetConnection(this)) {
             return null;
         }
 
@@ -251,7 +263,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     }
 
     private List<MovieTrailer> loadMovieTrailers() {
-        if (NetworkUtils.hasInternetConnection(this) == false) {
+        if (!NetworkUtils.hasInternetConnection(this)) {
             return null;
         }
 
@@ -285,10 +297,8 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         boolean isIntentSafe = activities.size() > 0;
 
         // Start an activity if it's safe
-        if (isIntentSafe == true) {
+        if (isIntentSafe) {
             startActivity(videoIntent);
-        } else {
-            Log.v("button", "cannot start the video");
         }
     }
 }

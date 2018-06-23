@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MovieReviewAdapter extends RecyclerView.Adapter<MovieReviewAdapter.ViewHolder> {
-    List<MovieReview> movieReviews;
+    private List<MovieReview> movieReviews;
 
     public MovieReviewAdapter() {
         this.movieReviews = new ArrayList<>();
@@ -28,7 +28,7 @@ public class MovieReviewAdapter extends RecyclerView.Adapter<MovieReviewAdapter.
         final TextView mReviewTextView;
         final TextView mReviewedByTextView;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             this.mReviewTextView = (TextView) itemView.findViewById(R.id.tv_movie_review);
             this.mReviewedByTextView = (TextView) itemView.findViewById(R.id.tv_reviewed_by);

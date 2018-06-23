@@ -20,7 +20,7 @@ public class MovieDbApiClient {
     private static final String POPULAR = "popular";
     private static final String TOP_RATED = "top_rated";
 
-    final String apiKey;
+    private final String apiKey;
 
     public MovieDbApiClient(String apiKey) {
         this.apiKey = apiKey.isEmpty() ? BuildConfig.MOVIE_DB_API_KEY : apiKey;
@@ -41,7 +41,7 @@ public class MovieDbApiClient {
         }
     }
 
-    List<Movie> getPopularMovies() throws JSONException {
+    private List<Movie> getPopularMovies() throws JSONException {
         Uri builtUri = Uri.parse(MOVIE_DB_URL + "popular").buildUpon()
                 .appendQueryParameter("api_key", this.apiKey)
                 .build();
@@ -53,7 +53,7 @@ public class MovieDbApiClient {
         return MovieDbJsonUtils.getMoviesFromJson(response);
     }
 
-    List<Movie> getTopRatedMovies() throws JSONException {
+    private List<Movie> getTopRatedMovies() throws JSONException {
         Uri builtUri = Uri.parse(MOVIE_DB_URL + "top_rated").buildUpon()
                 .appendQueryParameter("api_key", this.apiKey)
                 .build();
@@ -74,7 +74,10 @@ public class MovieDbApiClient {
 
         String response = NetworkUtils.getResponseFromHttpUrl(url);
 
-        return MovieDbJsonUtils.getMovieTrailersFromJsonResponse(response);
+        if (response != null) {
+            return MovieDbJsonUtils.getMovieTrailersFromJsonResponse(response);
+        }
+        return null;
     }
 
     @Nullable
@@ -97,6 +100,9 @@ public class MovieDbApiClient {
 
         String response = NetworkUtils.getResponseFromHttpUrl(url);
 
-        return MovieDbJsonUtils.getMovieReviewsFromJsonResponse(response);
+        if (response != null) {
+            return MovieDbJsonUtils.getMovieReviewsFromJsonResponse(response);
+        }
+        return null;
     }
 }

@@ -1,7 +1,7 @@
 package com.example.android.popularmovies.models;
 
 public class MovieTrailer {
-    String key;
+    private String key;
 
     public MovieTrailer(String key) {
         this.key = key;

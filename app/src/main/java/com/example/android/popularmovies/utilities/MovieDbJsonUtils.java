@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MovieDbJsonUtils {
+class MovieDbJsonUtils {
 
     public static List<Movie> getMoviesFromJson(String moviesJsonStr) throws JSONException {
         List<Movie> movies = new ArrayList<Movie>();
@@ -49,10 +49,10 @@ public class MovieDbJsonUtils {
             return movieTrailers;
         }
 
-        JSONObject trailersJosn = new JSONObject(movieTrailersJsonResponse);
+        JSONObject trailersJson = new JSONObject(movieTrailersJsonResponse);
 
-        if (trailersJosn.has("results")) {
-            JSONArray trailersArray = trailersJosn.getJSONArray("results");
+        if (trailersJson.has("results")) {
+            JSONArray trailersArray = trailersJson.getJSONArray("results");
 
             for (int i = 0; i < trailersArray.length(); i++) {
                 JSONObject trailerObject = trailersArray.getJSONObject(i);

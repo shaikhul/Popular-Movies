@@ -22,7 +22,7 @@ public abstract class MovieDatabase extends RoomDatabase {
                 context.getApplicationContext(),
                 MovieDatabase.class,
                 MOVIE_DB
-        ).fallbackToDestructiveMigration().build();
+        ).build();
 
         return instance;
     }

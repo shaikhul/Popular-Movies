@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        boolean initLoader = true;
         if (savedInstanceState != null) {
             sortBy = savedInstanceState.getInt(SORT_BY_KEY);
             Log.v("sort by", getResources().getString(sortBy));
@@ -102,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     }
 
     private List<Movie> loadMovies(String movieType) {
-        if (NetworkUtils.hasInternetConnection(this) == false) {
+        if (!NetworkUtils.hasInternetConnection(this)) {
             return null;
         }
 
@@ -222,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
         if (id != sortBy) {
             sortBy = item.getItemId();
+            setPageTitle();
             if (restartLoader) {
                 resetData();
                 getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
@@ -239,6 +239,12 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
             @Override
             public void onChanged(@Nullable List<Movie> movies) {
                 moviesAdapter.setMovies(movies);
+
+                if (movies == null) {
+                    showErrorMessage();
+                } else if (movies.size() == 0) {
+                    showEmptyState();
+                }
             }
         });
     }

@@ -19,4 +19,8 @@
     <string name="movie_title">Movie Title</string>
     <string name="release_date">Release Date</string>
     <string name="my_favorites">My Favorites</string>
+
+    <string name="msg_movie_deleted">Movie deleted from my favorites</string>
+    <string name="msg_movie_added">Movie added to my favorites</string>
+    <string name="msg_movie_exists">Movie already added to my favorites!</string>
 </resources>

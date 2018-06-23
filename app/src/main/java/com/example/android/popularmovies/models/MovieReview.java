@@ -1,8 +1,8 @@
 package com.example.android.popularmovies.models;
 
 public class MovieReview {
-    String author;
-    String content;
+    private String author;
+    private String content;
 
     public MovieReview(String author, String content) {
         this.author = author;
