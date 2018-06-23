@@ -1,10 +1,11 @@
 package com.example.android.popularmovies;
 
-import android.content.Context;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -12,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -19,21 +21,25 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.utilities.MovieDbJsonUtils;
+import com.example.android.popularmovies.models.Movie;
+import com.example.android.popularmovies.utilities.MovieDbApiClient;
+import com.example.android.popularmovies.utilities.MovieUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements LoaderCallbacks<ArrayList<Movie>>, MovieAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements LoaderCallbacks<List<Movie>>, MovieAdapter.MovieAdapterOnClickHandler {
     private RecyclerView mRecyclerView;
     private MovieAdapter moviesAdapter;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
 
     private int sortBy;
+    private static final String SORT_BY_KEY = "sortBy";
 
     private static final int MOVIE_LOADER_ID = 123;
     private static final String POPULAR = "popular";
@@ -56,13 +62,36 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        boolean isConnected = isConnected();
-
-        sortBy = R.id.action_sort_by_popular_movies;
-        LoaderCallbacks<ArrayList<Movie>> callback = MainActivity.this;
-        if (isConnected) {
-            getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
+        boolean initLoader = true;
+        if (savedInstanceState != null) {
+            sortBy = savedInstanceState.getInt(SORT_BY_KEY);
+            Log.v("sort by", getResources().getString(sortBy));
+        } else {
+            sortBy = R.id.action_sort_by_popular_movies;
         }
+
+        setPageTitle();
+
+        if (sortBy == R.id.action_my_favorites) {
+            setupViewModel();
+        } else {
+            LoaderCallbacks<List<Movie>> callback = MainActivity.this;
+            if (NetworkUtils.hasInternetConnection(this)) {
+                getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, callback);
+            }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(SORT_BY_KEY, sortBy);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        sortBy = savedInstanceState.getInt(SORT_BY_KEY);
     }
 
     @Override
@@ -72,21 +101,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
         startActivity(intentToStartDetailActivity);
     }
 
-    private boolean isConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
-    private ArrayList<Movie> loadMovies(String type) {
-        if (isConnected() == false) {
+    private List<Movie> loadMovies(String movieType) {
+        if (NetworkUtils.hasInternetConnection(this) == false) {
             return null;
         }
 
-        String moviesJsonStr = NetworkUtils.getResponseFromHttpUrl(type);
         try {
-            return MovieDbJsonUtils.getMoviesFromJson(moviesJsonStr);
+            return new MovieDbApiClient().getMovies(movieType);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -103,28 +124,29 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     }
 
     private void showErrorMessage() {
+        mErrorMessageDisplay.setText(R.string.error_message);
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
         mRecyclerView.setVisibility(View.INVISIBLE);
     }
 
     @NonNull
     @Override
-    public Loader<ArrayList<Movie>> onCreateLoader(int i, Bundle bundle) {
-        return new AsyncTaskLoader<ArrayList<Movie>>(this) {
+    public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
+        return new AsyncTaskLoader<List<Movie>>(this) {
 
-            ArrayList<Movie> movies = new ArrayList<Movie>();
+            List<Movie> movies = new ArrayList<Movie>();
 
             @Override
-            public ArrayList<Movie> loadInBackground() {
-                String type = POPULAR;
-
-                if (sortBy == R.id.action_sort_by_popular_movies) {
-                    type = POPULAR;
-                } else if (sortBy == R.id.action_sort_by_top_rated) {
-                    type = TOP_RATED;
+            public List<Movie> loadInBackground() {
+                switch (sortBy) {
+                    case R.id.action_sort_by_popular_movies:
+                        movies = loadMovies(POPULAR);
+                        break;
+                    case R.id.action_sort_by_top_rated:
+                        movies = loadMovies(TOP_RATED);
+                        break;
                 }
 
-                movies = loadMovies(type);
                 return movies;
             }
 
@@ -139,27 +161,39 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
             }
 
             @Override
-            public void deliverResult(ArrayList<Movie> data) {
+            public void deliverResult(List<Movie> data) {
                 movies = data;
                 super.deliverResult(data);
             }
         };
     }
 
+    private LiveData<List<Movie>> getMyFavoriteMovies() {
+        return MovieUtils.getMyFavoriteMovies(this);
+    }
+
     @Override
-    public void onLoadFinished(@NonNull Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
+    public void onLoadFinished(@NonNull Loader<List<Movie>> loader, List<Movie> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         moviesAdapter.setMovies(data);
 
-        if (data == null || data.size() <= 0) {
+        if (data == null) {
             showErrorMessage();
+        } else if (data.size() == 0) {
+            showEmptyState();
         } else {
             showMoviesDataView();
         }
     }
 
+    private void showEmptyState() {
+        mErrorMessageDisplay.setText(R.string.empty_state_message);
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
+    }
+
     @Override
-    public void onLoaderReset(@NonNull Loader<ArrayList<Movie>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<Movie>> loader) {
         // noop
     }
 
@@ -174,13 +208,52 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<A
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+        boolean restartLoader = false;
+        switch (id) {
+            case R.id.action_sort_by_popular_movies:
+                restartLoader = true;
+                break;
+            case R.id.action_sort_by_top_rated:
+                restartLoader = true;
+                break;
+            case R.id.action_my_favorites:
+                break;
+        }
 
         if (id != sortBy) {
             sortBy = item.getItemId();
-            resetData();
-            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+            if (restartLoader) {
+                resetData();
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+            } else {
+                setupViewModel();
+            }
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setupViewModel() {
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        viewModel.getMovies().observe(this, new Observer<List<Movie>>() {
+            @Override
+            public void onChanged(@Nullable List<Movie> movies) {
+                moviesAdapter.setMovies(movies);
+            }
+        });
+    }
+
+    private void setPageTitle() {
+        switch (sortBy) {
+            case R.id.action_sort_by_popular_movies:
+                setTitle(R.string.app_name);
+                break;
+            case R.id.action_sort_by_top_rated:
+                setTitle(R.string.title_top_rated);
+                break;
+            case R.id.action_my_favorites:
+                setTitle(R.string.title_my_favorites);
+                break;
+        }
     }
 }
