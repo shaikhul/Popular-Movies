@@ -37,18 +37,14 @@ import java.util.List;
 
 public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<MovieTrailer>>, MovieTrailerAdapter.MovieTrailerOnClickHandler {
 
-    private RecyclerView mRecyclerView;
     private MovieTrailerAdapter movieTrailerAdapter;
 
-    private RecyclerView mReviewRecyclerView;
     private MovieReviewAdapter movieReviewAdapter;
 
     private Movie movie;
     private static final String MOVIE_KEY = "movie";
     private static final int TRAILER_LOADER_ID = 150;
     private static final int REVIEWS_LOADER_ID = 200;
-
-    private LoaderManager.LoaderCallbacks<List<MovieReview>> reviewLoaderListener;
 
     private static class addToMyFavoritesAsyncTask extends AsyncTask<Movie, Void, Void> {
 
@@ -135,14 +131,14 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         mRatingBar = (RatingBar) findViewById(R.id.rb_vote_avg);
         mRatingBar.setRating(movie.getVoteAverage().intValue());
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_trailers);
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_trailers);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
 
         movieTrailerAdapter = new MovieTrailerAdapter(this);
         mRecyclerView.setAdapter(movieTrailerAdapter);
 
-        mReviewRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_reviews);
+        RecyclerView mReviewRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_reviews);
 
         RecyclerView.LayoutManager reviewLayoutManager = new LinearLayoutManager(this);
         mReviewRecyclerView.setLayoutManager(reviewLayoutManager);
@@ -150,12 +146,12 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         movieReviewAdapter = new MovieReviewAdapter();
         mReviewRecyclerView.setAdapter(movieReviewAdapter);
 
-        reviewLoaderListener = new LoaderManager.LoaderCallbacks<List<MovieReview>>() {
+        LoaderManager.LoaderCallbacks<List<MovieReview>> reviewLoaderListener = new LoaderManager.LoaderCallbacks<List<MovieReview>>() {
             @NonNull
             @Override
             public Loader<List<MovieReview>> onCreateLoader(int id, @Nullable Bundle args) {
                 return new AsyncTaskLoader<List<MovieReview>>(MovieDetailActivity.this) {
-                    List<MovieReview> movieReviews = new ArrayList<>();
+                    List<MovieReview> movieReviews = new ArrayList<MovieReview>();
 
                     @Nullable
                     @Override
@@ -226,9 +222,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @NonNull
     @Override
-    public Loader onCreateLoader(int id, @Nullable Bundle args) {
+    public Loader<List<MovieTrailer>> onCreateLoader(int id, @Nullable Bundle args) {
         return new AsyncTaskLoader<List<MovieTrailer>>(this) {
-            List<MovieTrailer> movieTrailers = new ArrayList<>();
+            List<MovieTrailer> movieTrailers = new ArrayList<MovieTrailer>();
 
             @Nullable
             @Override
@@ -289,7 +285,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         boolean isIntentSafe = activities.size() > 0;
 
         // Start an activity if it's safe
-        if (isIntentSafe) {
+        if (isIntentSafe == true) {
             startActivity(videoIntent);
         } else {
             Log.v("button", "cannot start the video");

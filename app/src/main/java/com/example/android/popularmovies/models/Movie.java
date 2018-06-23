@@ -32,6 +32,7 @@ public class Movie implements Parcelable {
 
     private String overview;
 
+    @Ignore
     public Movie() {
 
     }
@@ -57,6 +58,7 @@ public class Movie implements Parcelable {
         this.internalId = -1;
     }
 
+    @Ignore
     private Movie(Parcel in) {
         setInternalId(in.readInt());
         setId(in.readInt());

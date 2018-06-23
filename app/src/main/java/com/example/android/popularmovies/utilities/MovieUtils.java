@@ -1,5 +1,6 @@
 package com.example.android.popularmovies.utilities;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
 
 import com.example.android.popularmovies.data.MovieDatabase;
@@ -14,7 +15,7 @@ public class MovieUtils {
         return MOVIE_DB_POSTER_BASE_URL + path;
     }
 
-    public static List<Movie> getMyFavoriteMovies(Context context) {
+    public static LiveData<List<Movie>> getMyFavoriteMovies(Context context) {
         return MovieDatabase.getInstance(context).movieDao().getAll();
     }
 }
