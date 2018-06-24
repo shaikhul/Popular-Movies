@@ -1,6 +1,5 @@
 package com.example.android.popularmovies;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -23,7 +22,6 @@ import android.widget.TextView;
 
 import com.example.android.popularmovies.models.Movie;
 import com.example.android.popularmovies.utilities.MovieDbApiClient;
-import com.example.android.popularmovies.utilities.MovieUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 
 import org.json.JSONException;
@@ -41,12 +39,15 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     private int sortBy;
     private static final String SORT_BY_KEY = "sortBy";
 
+    private MainViewModel mViewModel;
+
     private static final int MOVIE_LOADER_ID = 123;
     private static final String POPULAR = "popular";
     private static final String TOP_RATED = "top_rated";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("main page state", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         }
 
         setPageTitle();
-
+        mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         if (sortBy == R.id.action_my_favorites) {
             setupViewModel();
         } else {
@@ -83,14 +84,59 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt(SORT_BY_KEY, sortBy);
         super.onSaveInstanceState(outState);
+        outState.putInt(SORT_BY_KEY, sortBy);
+        Log.v("main page state", "onSaveInstance");
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         sortBy = savedInstanceState.getInt(SORT_BY_KEY);
+        Log.v("main page state", "onRestoreInstance");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.v("main page state", "onDestroy");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.v("main page state", "onStart");
+        if (sortBy == R.id.action_my_favorites) {
+            setupViewModel();
+        } else {
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.v("main page state", "onStop");
+        if (sortBy == R.id.action_my_favorites) {
+            mViewModel.getMovies().observe(this, new Observer<List<Movie>>() {
+                @Override
+                public void onChanged(@Nullable List<Movie> movies) {
+                    mViewModel.getMovies().removeObserver(this);
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.v("main page state", "onPause");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.v("main page state", "onResume");
     }
 
     @Override
@@ -167,10 +213,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         };
     }
 
-    private LiveData<List<Movie>> getMyFavoriteMovies() {
-        return MovieUtils.getMyFavoriteMovies(this);
-    }
-
     @Override
     public void onLoadFinished(@NonNull Loader<List<Movie>> loader, List<Movie> data) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
@@ -206,40 +248,32 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        boolean restartLoader = false;
-        switch (id) {
+        sortBy = item.getItemId();
+        switch (sortBy) {
             case R.id.action_sort_by_popular_movies:
-                restartLoader = true;
                 break;
             case R.id.action_sort_by_top_rated:
-                restartLoader = true;
                 break;
             case R.id.action_my_favorites:
                 break;
         }
 
-        if (id != sortBy) {
-            sortBy = item.getItemId();
-            setPageTitle();
-            if (restartLoader) {
-                resetData();
-                getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
-            } else {
-                setupViewModel();
-            }
+        setPageTitle();
+        resetData();
+        if (sortBy == R.id.action_my_favorites) {
+            setupViewModel();
+        } else {
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     private void setupViewModel() {
-        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        viewModel.getMovies().observe(this, new Observer<List<Movie>>() {
+        mViewModel.getMovies().observe(this, new Observer<List<Movie>>() {
             @Override
             public void onChanged(@Nullable List<Movie> movies) {
                 moviesAdapter.setMovies(movies);
-
                 if (movies == null) {
                     showErrorMessage();
                 } else if (movies.size() == 0) {

@@ -14,7 +14,7 @@
             android:id="@+id/tv_movie_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="#3a6971"
+            android:background="@color/title_bg_color"
             android:padding="@dimen/margin_medium"
             android:text="@string/movie_title"
             android:textColor="@android:color/white"
@@ -106,9 +106,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/tv_trailers"
             android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp">
-
-        </android.support.v7.widget.RecyclerView>
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:id="@+id/tv_reviews"
@@ -128,9 +126,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@+id/tv_reviews"
             android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp">
-
-        </android.support.v7.widget.RecyclerView>
+            android:layout_marginTop="8dp" />
 
         <Button
             android:id="@+id/btn_favorites"
@@ -142,7 +138,7 @@
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:background="@android:drawable/ic_menu_save"
+            android:background="@android:drawable/star_big_off"
             android:contentDescription="@string/my_favorites"
             app:layout_constraintBottom_toBottomOf="@+id/iv_movie_thumbnail"
             app:layout_constraintEnd_toEndOf="parent"

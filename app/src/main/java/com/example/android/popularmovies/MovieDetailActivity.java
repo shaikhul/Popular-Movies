@@ -42,19 +42,22 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     private MovieReviewAdapter movieReviewAdapter;
 
+    private Button favoritesButton;
+
     private Movie movie;
+    private Boolean movieState;
+
     private static final String MOVIE_KEY = "movie";
+    private static final String MOVIE_STATE_KEY = "movie_state";
     private static final int TRAILER_LOADER_ID = 150;
     private static final int REVIEWS_LOADER_ID = 200;
 
     private class addToMyFavoritesAsyncTask extends AsyncTask<Movie, Void, String> {
 
         final private MovieDatabase db;
-        final private Boolean undo;
 
-        addToMyFavoritesAsyncTask(MovieDatabase db, Boolean undo) {
+        addToMyFavoritesAsyncTask(MovieDatabase db) {
             this.db = db;
-            this.undo = undo;
         }
 
         @Override
@@ -62,19 +65,17 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             Movie movie = movies[0];
             String msg;
 
-            if (undo) {
-                db.movieDao().delete(movie);
+            if (movieState) {
+                db.movieDao().deleteById(movie.getId());
                 msg = getResources().getString(R.string.msg_movie_deleted);
             } else {
-                Movie movieFromDb = db.movieDao().findById(movie.getId());
-                if (movieFromDb == null) {
-                    movie.setInternalId(null);
-                    db.movieDao().insert(movies[0]);
-                    msg = getResources().getString(R.string.msg_movie_added);
-                } else {
-                    msg = getResources().getString(R.string.msg_movie_exists);
-                }
+                int internalId = movies[0].getInternalId();
+                movies[0].setInternalId(null);
+                db.movieDao().insert(movies[0]);
+                movies[0].setInternalId(internalId);
+                msg = getResources().getString(R.string.msg_movie_added);
             }
+            movieState = !movieState;
             return msg;
         }
 
@@ -86,11 +87,24 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     }
 
     private void showToastMessage(String msg) {
-        Toast.makeText(MovieDetailActivity.this, msg, Toast.LENGTH_SHORT).show();
+        Toast toast = Toast.makeText(MovieDetailActivity.this, msg, Toast.LENGTH_SHORT);
+        if (toast != null) {
+            toast.show();
+        }
+        toggleFavIcon();
+    }
+
+    private void toggleFavIcon() {
+        if (movieState) {
+            favoritesButton.setBackgroundResource(android.R.drawable.star_big_on);
+        } else {
+            favoritesButton.setBackgroundResource(android.R.drawable.star_big_off);
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("detail page state", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
         setTitle(R.string.title_movie_detail);
@@ -102,28 +116,25 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         Bundle bundle;
         if (savedInstanceState != null) {
             movie = savedInstanceState.getParcelable(MOVIE_KEY);
+            movieState = savedInstanceState.getBoolean(MOVIE_STATE_KEY);
         } else {
             bundle = getIntent().getExtras();
             movie = (Movie) bundle.getParcelable("movie");
+            movieState = false;
         }
 
-        final Button favoritesButton = (Button) findViewById(R.id.btn_favorites);
+        favoritesButton = (Button) findViewById(R.id.btn_favorites);
+        toggleFavIcon();
 
         if (movie != null && movie.getInternalId() != -1) {
             // movie loaded from db
-            favoritesButton.setBackgroundResource(android.R.drawable.ic_menu_delete);
-            favoritesButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this), true).execute(movie);
-                }
-            });
+            favoritesButton.setVisibility(View.INVISIBLE);
         } else {
             // movie from api
             favoritesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this), false).execute(movie);
+                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this)).execute(movie);
                 }
             });
         }
@@ -210,13 +221,35 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(MOVIE_KEY, movie);
+        outState.putBoolean(MOVIE_STATE_KEY, movieState);
         super.onSaveInstanceState(outState);
+        Log.v("detail page state", "onSaveInstance");
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         movie = savedInstanceState.getParcelable(MOVIE_KEY);
+        movieState = savedInstanceState.getBoolean(MOVIE_STATE_KEY);
+        Log.v("detail page state", "onRestoreInstance");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.v("detail page state", "onStop");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.v("detail page state", "onPause");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.v("detail page state", "onResume");
     }
 
     private List<MovieReview> loadMovieReviews() {

@@ -11,7 +11,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class NetworkUtils {
+final public class NetworkUtils {
 
     public static String getResponseFromHttpUrl(URL url) {
         OkHttpClient client = new OkHttpClient();
