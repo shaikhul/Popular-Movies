@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -37,18 +38,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<MovieTrailer>>, MovieTrailerAdapter.MovieTrailerOnClickHandler {
-
+    private RecyclerView mTrailersRecyclerView, mReviewsRecyclerView;
     private MovieTrailerAdapter movieTrailerAdapter;
-
+    private RecyclerView.LayoutManager mTrailersLayoutManager, mReviewsLayoutManager;
     private MovieReviewAdapter movieReviewAdapter;
 
     private Button favoritesButton;
 
     private Movie movie;
     private Boolean movieState;
+    private static Parcelable trailerRVState, reviewRVState;
 
     private static final String MOVIE_KEY = "movie";
     private static final String MOVIE_STATE_KEY = "movie_state";
+    private static final String TRAILER_RV_STATE_KEY = "trailer_rv_state";
+    private static final String REVIEW_RV_STATE_KEY = "review_rv_state";
+
     private static final int TRAILER_LOADER_ID = 150;
     private static final int REVIEWS_LOADER_ID = 200;
 
@@ -155,20 +160,20 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         mRatingBar = (RatingBar) findViewById(R.id.rb_vote_avg);
         mRatingBar.setRating(movie.getVoteAverage().intValue());
 
-        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_trailers);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(layoutManager);
+        mTrailersRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_trailers);
+        mTrailersLayoutManager = new LinearLayoutManager(this);
+        mTrailersRecyclerView.setLayoutManager(mTrailersLayoutManager);
 
         movieTrailerAdapter = new MovieTrailerAdapter(this);
-        mRecyclerView.setAdapter(movieTrailerAdapter);
+        mTrailersRecyclerView.setAdapter(movieTrailerAdapter);
 
-        RecyclerView mReviewRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_reviews);
+        mReviewsRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_reviews);
 
-        RecyclerView.LayoutManager reviewLayoutManager = new LinearLayoutManager(this);
-        mReviewRecyclerView.setLayoutManager(reviewLayoutManager);
+        mReviewsLayoutManager = new LinearLayoutManager(this);
+        mReviewsRecyclerView.setLayoutManager(mReviewsLayoutManager);
 
         movieReviewAdapter = new MovieReviewAdapter();
-        mReviewRecyclerView.setAdapter(movieReviewAdapter);
+        mReviewsRecyclerView.setAdapter(movieReviewAdapter);
 
         LoaderManager.LoaderCallbacks<List<MovieReview>> reviewLoaderListener = new LoaderManager.LoaderCallbacks<List<MovieReview>>() {
             @NonNull
@@ -204,6 +209,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             @Override
             public void onLoadFinished(@NonNull Loader<List<MovieReview>> loader, List<MovieReview> data) {
                 movieReviewAdapter.setMovieReviews(data);
+                if (reviewRVState != null) {
+                    mReviewsLayoutManager.onRestoreInstanceState(reviewRVState);
+                    Log.v("review_rv_state", "restored from loadFinished");
+                }
             }
 
             @Override
@@ -220,9 +229,17 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
         outState.putParcelable(MOVIE_KEY, movie);
         outState.putBoolean(MOVIE_STATE_KEY, movieState);
-        super.onSaveInstanceState(outState);
+
+        trailerRVState = mTrailersLayoutManager.onSaveInstanceState();
+        outState.putParcelable(TRAILER_RV_STATE_KEY, trailerRVState);
+
+        reviewRVState = mReviewsLayoutManager.onSaveInstanceState();
+        outState.putParcelable(REVIEW_RV_STATE_KEY, reviewRVState);
+
         Log.v("detail page state", "onSaveInstance");
     }
 
@@ -231,6 +248,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         super.onRestoreInstanceState(savedInstanceState);
         movie = savedInstanceState.getParcelable(MOVIE_KEY);
         movieState = savedInstanceState.getBoolean(MOVIE_STATE_KEY);
+        trailerRVState = savedInstanceState.getParcelable(TRAILER_RV_STATE_KEY);
+        reviewRVState = savedInstanceState.getParcelable(REVIEW_RV_STATE_KEY);
+
         Log.v("detail page state", "onRestoreInstance");
     }
 
@@ -249,6 +269,15 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (trailerRVState != null) {
+            mTrailersLayoutManager.onRestoreInstanceState(trailerRVState);
+        }
+
+        if (reviewRVState != null) {
+            mReviewsLayoutManager.onRestoreInstanceState(reviewRVState);
+        }
+
         Log.v("detail page state", "onResume");
     }
 
@@ -312,6 +341,10 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     @Override
     public void onLoadFinished(@NonNull Loader<List<MovieTrailer>> loader, List<MovieTrailer> data) {
         movieTrailerAdapter.setMovieTrailers(data);
+        if (trailerRVState != null) {
+            Log.v("trailer_rv_state", "restored from loadFinished");
+            mTrailersLayoutManager.onRestoreInstanceState(trailerRVState);
+        }
     }
 
     @Override

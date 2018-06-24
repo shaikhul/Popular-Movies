@@ -3,6 +3,7 @@ package com.example.android.popularmovies;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -35,9 +36,12 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     private MovieAdapter moviesAdapter;
     private TextView mErrorMessageDisplay;
     private ProgressBar mLoadingIndicator;
+    private RecyclerView.LayoutManager gridLayoutManager;
 
     private int sortBy;
     private static final String SORT_BY_KEY = "sortBy";
+    private static final String LIST_STATE = "list_state";
+    private static Parcelable mListState;
 
     private MainViewModel mViewModel;
 
@@ -53,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies);
 
-        RecyclerView.LayoutManager gridLayoutManager;
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
 
@@ -65,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
         if (savedInstanceState != null) {
             sortBy = savedInstanceState.getInt(SORT_BY_KEY);
-            Log.v("sort by", getResources().getString(sortBy));
         } else {
             sortBy = R.id.action_sort_by_popular_movies;
         }
@@ -84,15 +86,23 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
         outState.putInt(SORT_BY_KEY, sortBy);
+
+        mListState = gridLayoutManager.onSaveInstanceState();
+        outState.putParcelable(LIST_STATE, mListState);
+
+        super.onSaveInstanceState(outState);
+
         Log.v("main page state", "onSaveInstance");
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+
         sortBy = savedInstanceState.getInt(SORT_BY_KEY);
+        mListState = savedInstanceState.getParcelable(LIST_STATE);
+
         Log.v("main page state", "onRestoreInstance");
     }
 
@@ -108,8 +118,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         Log.v("main page state", "onStart");
         if (sortBy == R.id.action_my_favorites) {
             setupViewModel();
-        } else {
-            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
         }
     }
 
@@ -117,14 +125,6 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     protected void onStop() {
         super.onStop();
         Log.v("main page state", "onStop");
-        if (sortBy == R.id.action_my_favorites) {
-            mViewModel.getMovies().observe(this, new Observer<List<Movie>>() {
-                @Override
-                public void onChanged(@Nullable List<Movie> movies) {
-                    mViewModel.getMovies().removeObserver(this);
-                }
-            });
-        }
     }
 
     @Override
@@ -137,6 +137,10 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
     protected void onResume() {
         super.onResume();
         Log.v("main page state", "onResume");
+
+        if (mListState != null) {
+            gridLayoutManager.onRestoreInstanceState(mListState);
+        }
     }
 
     @Override
@@ -273,11 +277,13 @@ public class MainActivity extends AppCompatActivity implements LoaderCallbacks<L
         mViewModel.getMovies().observe(this, new Observer<List<Movie>>() {
             @Override
             public void onChanged(@Nullable List<Movie> movies) {
-                moviesAdapter.setMovies(movies);
-                if (movies == null) {
-                    showErrorMessage();
-                } else if (movies.size() == 0) {
-                    showEmptyState();
+                if (sortBy == R.id.action_my_favorites) {
+                    moviesAdapter.setMovies(movies);
+                    if (movies == null) {
+                        showErrorMessage();
+                    } else if (movies.size() == 0) {
+                        showEmptyState();
+                    }
                 }
             }
         });
