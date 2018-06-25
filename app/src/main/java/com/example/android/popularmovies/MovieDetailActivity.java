@@ -1,5 +1,7 @@
 package com.example.android.popularmovies;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -20,6 +22,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,17 +45,21 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     private MovieTrailerAdapter movieTrailerAdapter;
     private RecyclerView.LayoutManager mTrailersLayoutManager, mReviewsLayoutManager;
     private MovieReviewAdapter movieReviewAdapter;
+    private ScrollView mScrollView;
+    private MovieDetailViewModel viewModel;
 
     private Button favoritesButton;
 
     private Movie movie;
     private Boolean movieState;
     private static Parcelable trailerRVState, reviewRVState;
+    private static int[] scrollPositions;
 
     private static final String MOVIE_KEY = "movie";
     private static final String MOVIE_STATE_KEY = "movie_state";
     private static final String TRAILER_RV_STATE_KEY = "trailer_rv_state";
     private static final String REVIEW_RV_STATE_KEY = "review_rv_state";
+    private static final String SCROLL_POSITIONS_KEY = "scroll_pos";
 
     private static final int TRAILER_LOADER_ID = 150;
     private static final int REVIEWS_LOADER_ID = 200;
@@ -114,6 +121,8 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         setContentView(R.layout.activity_movie_detail);
         setTitle(R.string.title_movie_detail);
 
+        mScrollView = (ScrollView) findViewById(R.id.sv_movie_detail);
+
         TextView mTitleTextView, mOverviewTextView, mReleaseDate;
         ImageView mImageView;
         RatingBar mRatingBar;
@@ -129,12 +138,20 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         }
 
         favoritesButton = (Button) findViewById(R.id.btn_favorites);
-        toggleFavIcon();
+        setupViewModel();
 
         if (movie != null && movie.getInternalId() != -1) {
+            movieState = true;
+            toggleFavIcon();
             // movie loaded from db
-            favoritesButton.setVisibility(View.INVISIBLE);
+            favoritesButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new addToMyFavoritesAsyncTask(MovieDatabase.getInstance(MovieDetailActivity.this)).execute(movie);
+                }
+            });
         } else {
+            toggleFavIcon();
             // movie from api
             favoritesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -212,6 +229,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 if (reviewRVState != null) {
                     mReviewsLayoutManager.onRestoreInstanceState(reviewRVState);
                     Log.v("review_rv_state", "restored from loadFinished");
+                    reviewRVState = null;
+                }
+                if (scrollPositions != null) {
+                    mScrollView.scrollTo(scrollPositions[0], scrollPositions[1]);
+                    scrollPositions = null;
                 }
             }
 
@@ -240,6 +262,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         reviewRVState = mReviewsLayoutManager.onSaveInstanceState();
         outState.putParcelable(REVIEW_RV_STATE_KEY, reviewRVState);
 
+        scrollPositions = new int[] {mScrollView.getScrollX(), mScrollView.getScrollY()};
+        outState.putIntArray(SCROLL_POSITIONS_KEY, scrollPositions);
+
         Log.v("detail page state", "onSaveInstance");
     }
 
@@ -250,6 +275,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         movieState = savedInstanceState.getBoolean(MOVIE_STATE_KEY);
         trailerRVState = savedInstanceState.getParcelable(TRAILER_RV_STATE_KEY);
         reviewRVState = savedInstanceState.getParcelable(REVIEW_RV_STATE_KEY);
+        scrollPositions = savedInstanceState.getIntArray(SCROLL_POSITIONS_KEY);
 
         Log.v("detail page state", "onRestoreInstance");
     }
@@ -344,6 +370,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         if (trailerRVState != null) {
             Log.v("trailer_rv_state", "restored from loadFinished");
             mTrailersLayoutManager.onRestoreInstanceState(trailerRVState);
+            trailerRVState = null;
+        }
+        if (scrollPositions != null) {
+            mScrollView.scrollTo(scrollPositions[0], scrollPositions[1]);
+            scrollPositions = null;
         }
     }
 
@@ -366,5 +397,23 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         if (isIntentSafe) {
             startActivity(videoIntent);
         }
+    }
+
+    private void setupViewModel() {
+        if (movie == null) {
+            return;
+        }
+
+        MovieDetailViewModelFactory factory = new MovieDetailViewModelFactory(MovieDatabase.getInstance(MovieDetailActivity.this), movie.getId());
+        viewModel = ViewModelProviders.of(this, factory).get(MovieDetailViewModel.class);
+        viewModel.getMovie().observe(this, new Observer<Movie>() {
+            @Override
+            public void onChanged(@Nullable Movie movie) {
+                if (movie != null) {
+                    movieState = true;
+                    toggleFavIcon();
+                }
+            }
+        });
     }
 }

@@ -17,7 +17,7 @@ public interface MovieDao {
     LiveData<List<Movie>> getAll();
 
     @Query("SELECT * FROM movies WHERE id = :id")
-    Movie findById(Integer id);
+    LiveData<Movie> findById(Integer id);
 
     @Query("DELETE FROM movies where id = :id")
     void deleteById(Integer id);
